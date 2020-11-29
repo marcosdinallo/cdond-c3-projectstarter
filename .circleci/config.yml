@@ -57,7 +57,23 @@ jobs:
               npm run build
         - save_cache:
             paths: [backend/node_modules]
-            key: backend-build              
+            key: backend-build
+
+  test-backend:
+      docker:
+        - image: circleci/node:13.8.0
+      steps:
+        - checkout
+        - run:
+            name: Install dependencies
+            command: |
+              cd backend
+              npm install
+        - run:
+            name: Test the code
+            command: |
+              cd backend
+            npm run test          
 
 workflows:
   my_workflow:
@@ -66,4 +82,6 @@ workflows:
       - build-backend
       - test-frontend:
           requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]    
       
