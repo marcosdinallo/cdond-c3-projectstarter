@@ -6,6 +6,8 @@ jobs:
         - image: circleci/node:13.8.0
       steps:
         - checkout
+        - restore_cache:
+            keys: [frontend-build]
         - run:
             name: Install dependencies
             command: |
@@ -16,6 +18,9 @@ jobs:
             command: |
               cd frontend
               npm run build
+        - save_cache:
+            paths: [frontend/node_modules]
+            key: frontend-build
 
 workflows:
   my_workflow:
