@@ -112,6 +112,43 @@ jobs:
               cd backend
               npm audit fix --audit-level=critical --force
         - slack/status      
+
+  deploy-infrastructure:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - run:
+          name: Ensure back-end infrastructure exists
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/backend.yml \
+              --region ${AWS_DEFAULT_REGION} \
+              --stack-name udapeople-infra-backend-${CIRCLE_WORKFLOW_ID} \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
+      - run:
+          name: Ensure front-end infrastructure exist
+          command: |
+            aws cloudformation deploy \
+              --template-file .circleci/files/frontend.yml \
+              --region ${AWS_DEFAULT_REGION} \
+              --stack-name udapeople-infra-frontend-${CIRCLE_WORKFLOW_ID} \
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"   
+      - run:
+          name: DNS
+          command: |
+            PUBLIC_DNS=$(aws ec2 describe-instances --region ${AWS_DEFAULT_REGION} --filters 'Name=tag:Name,Values=udapeople-backend-ec2-*' --query "Reservations[*].Instances[0].PublicDnsName" --output text)
+            echo ${PUBLIC_DNS}
+            curl -H "Content-Type: text/plain" \
+              -H "token: ${CIRCLE_WORKFLOW_ID}" \
+              --request PUT \
+              --data ${PUBLIC_DNS} \
+              https://api.memstash.io/values/public_dns
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - project/.circleci/ansible/inventory.txt
+      # Here's where you will add some code to rollback on failure  
        
 
 workflows:
@@ -127,4 +164,6 @@ workflows:
           requires: [test-frontend]
       - scan-backend:    
           requires: [test-backend]
+      - deploy-infrastructure:
+          requires: [scan-frontend, scan-backend]
       
