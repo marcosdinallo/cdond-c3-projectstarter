@@ -73,7 +73,7 @@ jobs:
             name: Test the code
             command: |
               cd backend
-            npm run test          
+              npm run test          
 
 workflows:
   my_workflow:
