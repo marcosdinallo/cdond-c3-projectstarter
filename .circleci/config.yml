@@ -18,6 +18,7 @@ jobs:
             npm run build
 
 workflows:
-  jobs:
-    - build-frontend
+  my_workflow:
+    jobs:
+      - build-frontend
       
