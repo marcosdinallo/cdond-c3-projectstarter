@@ -140,30 +140,25 @@ jobs:
             PUBLIC_DNS=$(aws ec2 describe-instances --region ${AWS_DEFAULT_REGION} --filters 'Name=tag:Name,Values=udapeople-backend-ec2-*' --query "Reservations[*].Instances[0].PublicDnsName" --output text)
             echo ${PUBLIC_DNS}
             curl -H "Content-Type: text/plain" \
-                -H "token: ${CIRCLE_WORKFLOW_ID}" \
-                --request PUT \
-                --data ${PUBLIC_DNS} \
-                https://api.memstash.io/values/public_dns
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/.circleci/ansible/inventory.txt
-      # Here's where you will add some code to rollback on failure  
+               -H "token: ${CIRCLE_WORKFLOW_ID}" \
+               --request PUT \
+               --data ${PUBLIC_DNS} \
+               https://api.memstash.io/values/public_dns
+      
        
 
 workflows:
   my_workflow:
     jobs:
-      - build-frontend
-      - build-backend
-      - test-frontend:
-          requires: [build-frontend]
-      - test-backend:
-          requires: [build-backend]    
-      - scan-frontend:    
-          requires: [test-frontend]
-      - scan-backend:    
-          requires: [test-backend]
-      - deploy-infrastructure:
-          requires: [scan-frontend, scan-backend]
+      # - build-frontend
+      # - build-backend
+      # - test-frontend:
+          # requires: [build-frontend]
+      # - test-backend:
+          # requires: [build-backend]    
+      # - scan-frontend:    
+          # requires: [test-frontend]
+      # - scan-backend:    
+          # requires: [test-backend]
+      - deploy-infrastructure
       
