@@ -192,11 +192,10 @@ jobs:
           fingerprints: ["a5:75:5a:df:3b:7b:7e:b6:66:1a:3d:79:81:09:63:06"] 
       - run:
           name: Configure server via ansible to deploy the backend
-          no_output_timeout: 10m
           command: |
             printenv >> ./backend/.env
             cd .circleci/ansible/
-            ansible-playbook -i .circleci/ansible/inventory .circleci/ansible/deploy.yml
+            ansible-playbook -i ./inventory deploy.yml
                  
       
        
