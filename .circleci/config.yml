@@ -75,6 +75,18 @@ jobs:
             command: |
               cd backend
               npm run build
+        - run:
+            name: Copy compiled backend for future use in ansible
+            command: |
+              mkdir /tmp/workspace
+              cp ./backend/package.json /tmp/workspace/
+              cd backend/dist
+              tar -zcvf /tmp/workspace/backend.tar.gz ./
+        - persist_to_workspace:
+            root: /tmp/workspace
+            paths:
+              - backend.tar.gz
+              - package.json              
         - save_cache:
             paths: [backend/node_modules]
             key: backend-build
@@ -127,6 +139,17 @@ jobs:
               --stack-name udapeople-infra-backend-${CIRCLE_WORKFLOW_ID} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"  
       - run:
+          name: DNS
+          when: on_success
+          command: |
+            PUBLIC_DNS=$(aws ec2 describe-instances --region ${AWS_DEFAULT_REGION} --filters 'Name=tag:Name,Values=udapeople-backend-ec2-*' --query "Reservations[*].Instances[0].PublicDnsName" --output text)
+            echo ${PUBLIC_DNS}
+            curl -H "Content-Type: text/plain" \
+               -H "token: ${CIRCLE_WORKFLOW_ID}" \
+               --request PUT \
+               --data ${PUBLIC_DNS} \
+               https://api.memstash.io/values/public_dns        
+      - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
@@ -135,15 +158,13 @@ jobs:
               --stack-name udapeople-infra-frontend-${CIRCLE_WORKFLOW_ID} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"   
       - run:
-          name: DNS
+          name: Deploy Cloudfront Infrastructure
           command: |
-            PUBLIC_DNS=$(aws ec2 describe-instances --region ${AWS_DEFAULT_REGION} --filters 'Name=tag:Name,Values=udapeople-backend-ec2-*' --query "Reservations[*].Instances[0].PublicDnsName" --output text)
-            echo ${PUBLIC_DNS}
-            curl -H "Content-Type: text/plain" \
-               -H "token: ${CIRCLE_WORKFLOW_ID}" \
-               --request PUT \
-               --data ${PUBLIC_DNS} \
-               https://api.memstash.io/values/public_dns
+            aws cloudformation deploy \
+            --template-file .circleci/files/cloudfront.yml \
+            --stack-name cloudfront-${CIRCLE_WORKFLOW_ID} \
+            --parameter-overrides ID="${IRCLE_WORKFLOW_ID}"              
+      
 
   deploy-backend:
     docker:
@@ -171,10 +192,11 @@ jobs:
           fingerprints: ["a5:75:5a:df:3b:7b:7e:b6:66:1a:3d:79:81:09:63:06"] 
       - run:
           name: Configure server via ansible to deploy the backend
+          no_output_timeout: 10m
           command: |
             printenv >> ./backend/.env
             cd .circleci/ansible/
-            ansible-playbook -i ./inventory deploy.yml
+            ansible-playbook -i .circleci/ansible/inventory .circleci/ansible/deploy.yml
                  
       
        
