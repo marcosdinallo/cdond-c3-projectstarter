@@ -1,5 +1,57 @@
 version: 2.1
 
+commands:
+  destroy-environment:
+    description: Destroy all cloudformation stacks given a workflow ID.
+    steps:
+      - run:
+          name: Delete all files in the current S3 bucket
+          command: |
+            if aws s3api head-bucket --bucket udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}
+            then
+              aws s3 rm s3://udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}/ --recursive
+            fi
+          when: on_fail
+      - run:
+          name: Delete the current AWS CloudFormation stacks
+          command: |
+            if aws cloudformation wait stack-exists --stack-name udapeople-cloudfront
+            then 
+              aws cloudformation delete-stack --stack-name udapeople-cloudfront
+            fi
+            if aws cloudformation wait stack-exists --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
+            then 
+              aws cloudformation delete-stack --stack-name udapeople-frontend-${CIRCLE_WORKFLOW_ID}
+            fi
+            if aws cloudformation wait stack-exists --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID}
+            then
+              aws cloudformation delete-stack --stack-name udapeople-backend-${CIRCLE_WORKFLOW_ID}
+            fi
+          when: on_fail
+
+  revert-migration:
+    description: Revert the latest migration
+    steps:
+      - run:
+          name: Get the public DNS of EC2 instance from https://memstash.io/
+          command: |
+            PUBLIC_DNS=$(curl -H "token: ${CIRCLE_WORKFLOW_ID}" --request GET https://api.memstash.io/values/public_dns)
+            echo ${PUBLIC_DNS}
+            cd .circleci/ansible/
+            echo "[all]" > ./inventory
+            echo ${PUBLIC_DNS} >> ./inventory
+            cat ./inventory
+          when: on_fail
+      - add_ssh_keys:
+          fingerprints: ["a5:75:5a:df:3b:7b:7e:b6:66:1a:3d:79:81:09:63:06"]
+      - run:
+          name: Revert the last migration
+          command: |
+            printenv >> ./backend/.env
+            cd .circleci/ansible/
+            ansible-playbook -i ./inventory db_rollback.yml
+          when: on_fail
+
 orbs:
   slack: circleci/slack@3.4.2
 
@@ -157,13 +209,8 @@ jobs:
               --region ${AWS_DEFAULT_REGION} \
               --stack-name udapeople-infra-frontend-${CIRCLE_WORKFLOW_ID} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"   
-      # - run:
-      #     name: Deploy Cloudfront Infrastructure
-      #     command: |
-      #       aws cloudformation deploy \
-      #       --template-file .circleci/files/cloudfront.yml \
-      #       --stack-name cloudfront-${CIRCLE_WORKFLOW_ID} \
-      #       --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"              
+      - destroy-environment        
+                  
       
 
   deploy-backend:
@@ -199,6 +246,8 @@ jobs:
             printenv >> ./backend/.env
             cd .circleci/ansible/
             ansible-playbook -i ./inventory deploy.yml
+      - destroy-environment
+      - revert-migration 
 
   smoke-test:
     docker:
@@ -230,10 +279,12 @@ jobs:
             echo ${PUBLIC_DNS}
             if curl -s "http://${PUBLIC_DNS}:3030/api/status" | grep "ok"
             then
-              return 0
+              return 1
             else
               return 1
-            fi            
+            fi
+      - destroy-environment
+      - revert-migration            
                  
   deploy-frontend:
     docker:
@@ -262,6 +313,8 @@ jobs:
           no_output_timeout: 10m
           command: |
             aws s3 cp ./frontend/dist s3://udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}/ --recursive
+      - destroy-environment
+
 
     
        
