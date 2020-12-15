@@ -268,9 +268,9 @@ jobs:
             URL="http://udapeople-s3bucket-${CIRCLE_WORKFLOW_ID}.s3-website.us-east-2.amazonaws.com/#/employees"
             if curl -s ${URL} | grep "Welcome"
             then
-              return 0
-            else
               return 1
+            else
+              return 0
             fi
       - run:
           name: Smoke test on backend
@@ -316,6 +316,7 @@ jobs:
       - destroy-environment
 
 
+
     
        
 
@@ -339,5 +340,6 @@ workflows:
           requires: [deploy-backend]   
       - smoke-test: 
           requires: [deploy-backend, scan-frontend, scan-backend]
+  
 
       
