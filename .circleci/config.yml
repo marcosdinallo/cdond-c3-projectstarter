@@ -209,6 +209,25 @@ jobs:
               --region ${AWS_DEFAULT_REGION} \
               --stack-name udapeople-infra-frontend-${CIRCLE_WORKFLOW_ID} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"   
+# ========================================================================================================
+# MONITORING            
+      - run:
+          name: create Monitoring infrastructure
+          command: |
+            aws cloudformation deploy
+              --template-file .circleci/files/prometheus_cfn.yml \
+              --region ${AWS_DEFAULT_REGION} \
+              --stack-name "prometheus-overwatch-${CIRCLE_WORKFLOW_ID} \"
+              --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}" 
+      - run:
+          name: get public IP of overwatch
+          command: |
+            echo "[overwatch]" >> inventory
+            aws cloudformation describe-stacks \
+            --stack-name "rometheus-overwatch-${CIRCLE_WORKFLOW_ID} \
+            --query "Stacks[0].Outputs[?OutputKey==\`prometheusDNSName\`].OutputValue" \
+            --output text >> inventor
+              
       - destroy-environment        
                   
       
@@ -246,23 +265,7 @@ jobs:
             printenv >> ./backend/.env
             cd .circleci/ansible/
             ansible-playbook -i ./inventory deploy.yml
-# ========================================================================================================
-# MONITORING            
-      - run:
-          name: create Monitoring infrastructure
-          command: |
-            aws cloudformation deploy --template-file .circleci/files/prometheus_cfn.yml \
-            --stack-name "prometheus-overwatch"
-      - run:
-          name: get public IP of overwatch
-          command: |
-            echo "[overwatch]" >> inventory
-            aws cloudformation describe-stacks \
-            --stack-name "prometheus-overwatch" \
-            --region ${AWS_DEFAULT_REGION} \
-            --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}" \
-            --query "Stacks[0].Outputs[?OutputKey==\`prometheusDNSName\`].OutputValue" \
-            --output text >> inventory    
+
 
       - destroy-environment
       - revert-migration 

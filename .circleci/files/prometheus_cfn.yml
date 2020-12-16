@@ -1,5 +1,4 @@
-AWSTemplateFormatVersion: 2010-09-09
-Description: |
+Description: >
   monitoring instance
 
 Parameters:
@@ -16,6 +15,9 @@ Resources:
       KeyName: udacity
       SecurityGroups:
         - !Ref secGroup
+      Tags:
+        - Key: Name
+          Value: !Sub udapeople-backend-ec2-prome-${ID}     
 
   secGroup:
     Type: "AWS::EC2::SecurityGroup"
