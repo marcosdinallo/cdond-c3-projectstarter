@@ -1,6 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: |
   monitoring instance
+
+Parameters:
+  ID:
+    Description: Unique identifier.
+    Type: String
+      
 Resources:
   instance:
     Type: "AWS::EC2::Instance"
