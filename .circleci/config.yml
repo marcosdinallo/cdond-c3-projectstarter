@@ -259,6 +259,8 @@ jobs:
             echo "[overwatch]" >> inventory
             aws cloudformation describe-stacks \
             --stack-name "prometheus-overwatch" \
+            --region ${AWS_DEFAULT_REGION} \
+            --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"
             --query "Stacks[0].Outputs[?OutputKey==\`prometheusDNSName\`].OutputValue" \
             --output text >> inventory    
 
