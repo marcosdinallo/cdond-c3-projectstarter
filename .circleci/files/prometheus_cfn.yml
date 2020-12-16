@@ -5,7 +5,7 @@ Resources:
   instance:
     Type: "AWS::EC2::Instance"
     Properties:  
-      ImageId: ami-0a634ae95e11c6f91
+      ImageId: ami-07dd19a7900a1f049
       InstanceType: t2.micro
       KeyName: testAwsCli
       SecurityGroups:
@@ -14,8 +14,8 @@ Resources:
   secGroup:
     Type: "AWS::EC2::SecurityGroup"
     Properties:
+      GroupName: !Sub udapeople-secgroup-prome-${ID}
       GroupDescription: Sec group for ec2 ssh and monitoring access #required
-  
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 22 
