@@ -7,7 +7,7 @@ Resources:
     Properties:  
       ImageId: ami-07dd19a7900a1f049
       InstanceType: t2.micro
-      KeyName: testAwsCli
+      KeyName: udacity
       SecurityGroups:
         - !Ref secGroup
 
