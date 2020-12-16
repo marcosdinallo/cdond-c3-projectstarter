@@ -6,7 +6,7 @@ Parameters:
   ID:
     Description: Unique identifier.
     Type: String
-      
+
 Resources:
   instance:
     Type: "AWS::EC2::Instance"
@@ -47,6 +47,9 @@ Resources:
           FromPort: 3000
           ToPort: 3000
           CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub dapeople-secgroup-prome-${ID}  
 
 Outputs:
   prometheusDNSName:
