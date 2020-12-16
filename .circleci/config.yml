@@ -214,7 +214,7 @@ jobs:
       - run:
           name: create Monitoring infrastructure
           command: |
-            aws cloudformation deploy
+            aws cloudformation deploy \
               --template-file .circleci/files/prometheus_cfn.yml \
               --region ${AWS_DEFAULT_REGION} \
               --stack-name "prometheus-overwatch-${CIRCLE_WORKFLOW_ID} \"
