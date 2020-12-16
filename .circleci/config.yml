@@ -246,6 +246,22 @@ jobs:
             printenv >> ./backend/.env
             cd .circleci/ansible/
             ansible-playbook -i ./inventory deploy.yml
+# ========================================================================================================
+# MONITORING            
+      - run:
+          name: create Monitoring infrastructure
+          command: |
+            aws cloudformation deploy --template-file .circleci/files/prometheus_cfn.yml \
+            --stack-name "prometheus-overwatch"
+      - run:
+          name: get public IP of overwatch
+          command: |
+            echo "[overwatch]" >> inventory
+            aws cloudformation describe-stacks \
+            --stack-name "prometheus-overwatch" \
+            --query "Stacks[0].Outputs[?OutputKey==\`prometheusDNSName\`].OutputValue" \
+            --output text >> inventory    
+
       - destroy-environment
       - revert-migration 
 
@@ -344,6 +360,31 @@ jobs:
               aws cloudformation delete-stack --stack-name udapeople-backend-${OLD_CIRCLE_WORKFLOW_ID}
             fi
       - destroy-environment
+
+# # ========================================================================================================
+# # MONITORING
+#   configure-overwatch:
+#     docker:
+#     - image: python:3.7-alpine3.11
+#     steps:
+#       - add_ssh_keys:
+#           fingerprints: [a5:75:5a:df:3b:7b:7e:b6:66:1a:3d:79:81:09:63:06]
+#       - checkout
+#       - run: apk add tar gzip
+#       - attach_workspace:
+#           at: ./
+#       - run:
+#           name: Install dependencies and run build to generate dist folder to copy into remote server 
+#           command: | 
+#             pip install awscli && apk add --update ansible 
+#       - run: |
+#           sed -i "s|PROM_SECRET_KEY|$PROM_SECRET_ACCESS|g" .circleci/ansible/roles/setup_prometheus/files/prometheus.yml
+#           sed -i "s|SLACK_WEBHOOK|$SLACK_WEBHOOK|g" .circleci/ansible/roles/setup_alertsmanager/files/alertmanager.yml
+#       - run: 
+#           name: Configure overwatch server using ansible playbook
+#           command: ansible-playbook -i inventory .circleci/ansible/setup_prometheus_monitor.yml
+#           environment:
+#             ANSIBLE_HOST_KEY_CHECKING: False      
   
     
        
