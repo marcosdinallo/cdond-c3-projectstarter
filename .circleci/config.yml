@@ -210,26 +210,7 @@ jobs:
               --stack-name udapeople-infra-frontend-${CIRCLE_WORKFLOW_ID} \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}"   
       - destroy-environment         
-# ========================================================================================================
-# MONITORING            
-      # - run:
-      #     name: create Monitoring infrastructure
-      #     command: |
-      #       aws cloudformation deploy \
-      #         --template-file .circleci/files/prometheus_cfn.yml \
-      #         --region ${AWS_DEFAULT_REGION} \
-      #         --stack-name "prometheus-overwatch-${CIRCLE_WORKFLOW_ID} \"
-      #         --parameter-overrides ID="${CIRCLE_WORKFLOW_ID}" 
-      # - run:
-      #     name: get public IP of overwatch
-      #     command: |
-      #       echo "[overwatch]" >> inventory
-      #       aws cloudformation describe-stacks \
-      #       --stack-name "rometheus-overwatch-${CIRCLE_WORKFLOW_ID} \
-      #       --query "Stacks[0].Outputs[?OutputKey==\`prometheusDNSName\`].OutputValue" \
-      #       --output text >> inventor
-              
-      # - destroy-environment        
+   
                   
       
 
@@ -367,77 +348,48 @@ jobs:
             fi
       - destroy-environment
 
-# ========================================================================================================
-# MONITORING
-  # configure-overwatch:
-  #   docker:
-  #   - image: python:3.7-alpine3.11
-  #   steps:
-  #     - add_ssh_keys:
-  #         fingerprints: [a5:75:5a:df:3b:7b:7e:b6:66:1a:3d:79:81:09:63:06]
-  #     - checkout
-  #     - run: apk add tar gzip
-  #     - attach_workspace:
-  #         at: ./
-  #     - run:
-  #         name: Install dependencies and run build to generate dist folder to copy into remote server 
-  #         command: | 
-  #           pip install awscli && apk add --update ansible 
-  #     - run: |
-  #         sed -i "s|PROM_SECRET_KEY|$PROM_SECRET_ACCESS|g" .circleci/ansible/roles/setup_prometheus/files/prometheus.yml
-  #         sed -i "s|SLACK_WEBHOOK|$SLACK_WEBHOOK|g" .circleci/ansible/roles/setup_alertsmanager/files/alertmanager.yml
-  #     - run: 
-  #         name: Configure overwatch server using ansible playbook
-  #         command: ansible-playbook -i inventory .circleci/ansible/setup_prometheus_monitor.yml
-  #         environment:
-  #           ANSIBLE_HOST_KEY_CHECKING: False      
+
   
     
        
-
-# workflows:
-#   my_workflow:
-#     jobs:
-#       - build-frontend
-#       - build-backend
-#       - test-frontend:
-#           requires: [build-frontend]
-#       - test-backend:
-#           requires: [build-backend]    
-#       - scan-frontend:    
-#           requires: [test-frontend]
-#       - scan-backend:    
-#           requires: [test-backend]
-#       - deploy-infrastructure
-#       - deploy-backend:
-#           requires: [deploy-infrastructure, scan-frontend, scan-backend]
-#       - deploy-frontend:
-#           requires: [deploy-backend]   
-#       - smoke-test: 
-#           requires: [deploy-backend, scan-frontend, scan-backend]
-#       - cloudfront-update:
-#           requires: [smoke-test]    
 
 workflows:
   my_workflow:
     jobs:
       - build-frontend
       - build-backend
-      # - test-frontend:
-      #     requires: [build-frontend]
-      # - test-backend:
-      #     requires: [build-backend]    
-      # - scan-frontend:    
-      #     requires: [test-frontend]
-      # - scan-backend:    
-      #     requires: [test-backend]
-      - deploy-infrastructure
+      - test-frontend:
+          requires: [build-frontend]
+      - test-backend:
+          requires: [build-backend]    
+      - scan-frontend:    
+          requires: [test-frontend]
+      - scan-backend:    
+          requires: [test-backend]
+      - deploy-infrastructure:
+          filters:
+            branches:
+              only: main
       - deploy-backend:
-          requires: [build-backend, deploy-infrastructure]
+          filters:
+            branches:
+              only: main        
+          requires: [deploy-infrastructure, scan-frontend, scan-backend]
       - deploy-frontend:
-          requires: [deploy-backend, build-frontend]   
-      # - smoke-test: 
-      #     requires: [deploy-backend, scan-frontend, scan-backend]
+          filters:
+            branches:
+              only: main        
+          requires: [deploy-backend]   
+      - smoke-test: 
+          filters:
+            branches:
+              only: main        
+          requires: [deploy-backend, scan-frontend, scan-backend]
       - cloudfront-update:
-          requires: [deploy-backend, deploy-frontend]   
+          filters:
+            branches:
+              only: main        
+          requires: [smoke-test]    
+
+
       
