@@ -363,8 +363,14 @@ workflows:
       - test-backend:
           requires: [build-backend]    
       - scan-frontend:    
+          filters:
+            branches:
+              only: master      
           requires: [test-frontend]
       - scan-backend:    
+          filters:
+            branches:
+              only: master      
           requires: [test-backend]
       - deploy-infrastructure:
           filters:
