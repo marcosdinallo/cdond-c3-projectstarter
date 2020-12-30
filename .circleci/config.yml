@@ -369,26 +369,26 @@ workflows:
       - deploy-infrastructure:
           filters:
             branches:
-              only: main
+              only: master
       - deploy-backend:
           filters:
             branches:
-              only: main        
+              only: master        
           requires: [deploy-infrastructure, scan-frontend, scan-backend]
       - deploy-frontend:
           filters:
             branches:
-              only: main        
+              only: master        
           requires: [deploy-backend]   
       - smoke-test: 
           filters:
             branches:
-              only: main        
+              only: master        
           requires: [deploy-backend, scan-frontend, scan-backend]
       - cloudfront-update:
           filters:
             branches:
-              only: main        
+              only: master        
           requires: [smoke-test]    
 
 
