@@ -1,1 +1,5 @@
- [URL01] [ https://github.com/marcosdinallo/cdond-c3-projectstarter ]
+[URL01] https://github.com/marcosdinallo/cdond-c3-projectstarter 
+[URL02] http://udapeople-s3bucket-fe00df84-0e7b-4589-9c4e-8c6634ffd77c.s3-website-us-west-2.amazonaws.com
+[URL03] drdck4cisbiy9.cloudfront.net   
+[URL04] ec2-54-202-37-228.us-west-2.compute.amazonaws.com
+[URL05] http://ec2-34-217-95-86.us-west-2.compute.amazonaws.com:9090/
